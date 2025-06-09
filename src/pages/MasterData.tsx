@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,9 +30,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Search, Plus, Pencil, Trash } from 'lucide-react';
+import DemoComponent from '@/components/DemoComponent';
 
 interface Item {
   id: string;
@@ -45,25 +54,23 @@ interface Item {
 const MasterData = () => {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+  
+  // Generate more demo data for pagination
   const [items, setItems] = useState<Item[]>([
-    {
-      id: '1',
-      name: 'Field Type 1',
-      description: 'Description for field type 1',
-      status: 'active',
-    },
-    {
-      id: '2',
-      name: 'Field Type 2',
-      description: 'Description for field type 2',
-      status: 'active',
-    },
-    {
-      id: '3',
-      name: 'Field Type 3',
-      description: 'Description for field type 3',
-      status: 'inactive',
-    },
+    { id: '1', name: 'Field Type 1', description: 'Description for field type 1', status: 'active' },
+    { id: '2', name: 'Field Type 2', description: 'Description for field type 2', status: 'active' },
+    { id: '3', name: 'Field Type 3', description: 'Description for field type 3', status: 'inactive' },
+    { id: '4', name: 'Field Type 4', description: 'Description for field type 4', status: 'active' },
+    { id: '5', name: 'Field Type 5', description: 'Description for field type 5', status: 'inactive' },
+    { id: '6', name: 'Field Type 6', description: 'Description for field type 6', status: 'active' },
+    { id: '7', name: 'Field Type 7', description: 'Description for field type 7', status: 'active' },
+    { id: '8', name: 'Field Type 8', description: 'Description for field type 8', status: 'inactive' },
+    { id: '9', name: 'Field Type 9', description: 'Description for field type 9', status: 'active' },
+    { id: '10', name: 'Field Type 10', description: 'Description for field type 10', status: 'active' },
+    { id: '11', name: 'Field Type 11', description: 'Description for field type 11', status: 'inactive' },
+    { id: '12', name: 'Field Type 12', description: 'Description for field type 12', status: 'active' },
   ]);
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -74,8 +81,19 @@ const MasterData = () => {
     item.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filteredItems.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
   };
 
   const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
@@ -181,6 +199,8 @@ const MasterData = () => {
         </Dialog>
       </div>
 
+      <DemoComponent />
+
       <div className="flex items-center space-x-2">
         <Search className="h-4 w-4 text-muted-foreground" />
         <Input
@@ -202,7 +222,7 @@ const MasterData = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredItems.map((item) => (
+            {currentItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell>{item.description}</TableCell>
@@ -243,7 +263,7 @@ const MasterData = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {filteredItems.length === 0 && (
+            {currentItems.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="h-24 text-center">
                   No results found.
@@ -253,6 +273,69 @@ const MasterData = () => {
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) handlePageChange(currentPage - 1);
+                  }}
+                  className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(page);
+                        }}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                } else if (
+                  page === currentPage - 2 ||
+                  page === currentPage + 2
+                ) {
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+                return null;
+              })}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage < totalPages) handlePageChange(currentPage + 1);
+                  }}
+                  className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {currentItem && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
